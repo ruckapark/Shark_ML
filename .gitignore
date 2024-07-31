@@ -125,7 +125,9 @@ venv.bak/
 
 # Ignore data and pretrained models and test development files
 data/
+!src/data/
 models/
+!src/models/
 dev/
 
 #VS Code

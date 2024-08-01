@@ -11,4 +11,4 @@ dependencies:
   - seaborn
   - tensorflow
   - Pillow
-  - opencv-python
+  - opencv

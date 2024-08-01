@@ -41,3 +41,8 @@ This project is structured to facilitate the development of machine learning mod
 - **environment.yml**: Necessary environment installation for SharkEggs clone.
 
 - **README.md**: This overview.
+
+
+## Create python environment
+
+Either create environment according to environment.yml file (e.g. conda env create -f environment.yml) or pip install from requirements.txt (pip install). Opencv is name of cv2 in conda install, opencv-python in pip install.

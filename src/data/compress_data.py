@@ -24,3 +24,10 @@ if __name__ == "__main__":
     #initial test quality - ok for firs training
     imS = cv2.resize(image, (224, 224))
     cv2.imshow("output", imS)
+    
+    #Compare to other compression methods - minimal difference
+    imC = cv2.resize(image, (224, 224), interpolation=cv2.INTER_CUBIC)
+    cv2.imshow("output_cubic", imC)
+    
+    imLz = cv2.resize(image, (224, 224), interpolation=cv2.INTER_LANCZOS4)
+    cv2.imshow("output_Lz", imLz)

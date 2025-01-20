@@ -76,7 +76,7 @@ class ImageAugmentor:
         """
         return -25*zoom + 33
     
-    def cv_change_brightness(self, b_value: float) -> Image:
+    def cv_change_brightness(self, b_value: float):
 
         """Function could also work to shift hue or saturation"""
 

@@ -4,10 +4,17 @@ from pathlib import Path
 import cv2
 
 class ImageAugmentor:
-    def __init__(self, image_path, augment = True):
-        #Functions not properly developped for PIL
-        #self.image = Image.open(image_path)
-        self.image = cv2.imread(image_path)
+    def __init__(self, image, augment = True):
+
+        #add or read image depending on input
+        if isinstance(image, (str, Path)):
+            self.image = cv2.imread(str(image))
+            if self.image is None:
+                raise ValueError(f"Image at {image} could not be read. Check the path or format.")
+        elif isinstance(image, (np.ndarray)):
+            self.image = image
+        else:
+            raise TypeError("Input must be a cv2 image (numpy.ndarray), string, or Path object.")
         self.factors = {'zoom': 1, 'rotate': 1, 'brightness': 1, 'blur': 1, 'flip_hor': 0, 'flip_vert': 0}
         if augment:
             self.init_factors()

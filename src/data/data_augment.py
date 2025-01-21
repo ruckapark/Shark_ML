@@ -15,10 +15,21 @@ class ImageAugmentor:
             self.image = image
         else:
             raise TypeError("Input must be a cv2 image (numpy.ndarray), string, or Path object.")
-        self.factors = {'zoom': 1, 'rotate': 1, 'brightness': 1, 'blur': 1, 'flip_hor': 0, 'flip_vert': 0}
+        self.original_image = self.image.copy()
+        self.dims = self.original_image.shape[:2]
+        self.factors = {'zoom': 1, 'rotate': 1, 'brightness': 1, 'blur': 1, 'flip_hor': 0, 'flip_vert': 0, 'k_factor': 0}
         if augment:
             self.init_factors()
             self.augment()
+
+    def reset_image(self):
+        self.image = self.original_image.copy()
+
+    def reset_augment(self):
+        """Reset image to original and reinitialize factors to reaugment original image"""
+        self.image = self.original_image.copy()
+        self.init_factors()
+        self.augment()
 
     def init_factors(self):
         "Randomly initialize factors for data augmentation"
@@ -40,12 +51,17 @@ class ImageAugmentor:
         self.factors['brightness'] = brightness_factor
         
         #Change blur kernel size using triangular distribution
-        blur_kernel_factor = int(np.random.triangular(left=0, mode=0, right=50))
+        blur_right = self.blur_max()
+        blur_kernel_factor = int(np.random.triangular(left=0, mode=0, right=blur_right))
         self.factors['blur'] = blur_kernel_factor
         
         flip_hor,flip_vert = np.random.randint(0,2),np.random.randint(0,2)
         self.factors['flip_hor'] = flip_hor
         self.factors['flip_vert'] = flip_vert
+
+        #Full rotation
+        if self.dims[0] == self.dims[1]:
+            self.factors['k_factor'] = np.random.randint(0,4)
     
     def cv_zoom(self, factor: float) -> np.array:
         height,width,depth = self.image.shape
@@ -82,6 +98,27 @@ class ImageAugmentor:
         b = 33
         """
         return -25*zoom + 33
+    
+    def blur_max(self):
+        #Get max blur for a given image size
+        return np.mean(self.dims,dtype = int)//60
+    
+    def calculate_min_zoom(self,width: int, height: int, angle_degrees: float) -> float:
+        # Convert angle to radians
+        angle_radians = np.deg2rad(angle_degrees)
+        
+        # Calculate new width and height after rotation
+        new_width = abs(width * np.cos(angle_radians)) + abs(height * np.sin(angle_radians))
+        new_height = abs(height * np.cos(angle_radians)) + abs(width * np.sin(angle_radians))
+        
+        # Calculate original and rotated bounding box diagonals
+        original_diagonal = np.sqrt(width**2 + height**2)
+        rotated_diagonal = np.sqrt(new_width**2 + new_height**2)
+        
+        # Calculate zoom factor
+        zoom_factor = (rotated_diagonal / original_diagonal) - 1
+        
+        return 1 + (2*zoom_factor)
     
     def cv_change_brightness(self, b_value: float):
 
@@ -128,6 +165,7 @@ class ImageAugmentor:
         self.cv_change_brightness(self.factors["brightness"])
         self.cv_add_blur(kernel_size = (self.factors["blur"],self.factors["blur"]))
         self.cv_flip(self.factors["flip_hor"],self.factors["flip_vert"])
+        self.image = np.rot90(self.image, self.factors["k_factor"])
     
     def save_image(self, output_path: str):
         cv2.imwrite(output_path,self.image)
